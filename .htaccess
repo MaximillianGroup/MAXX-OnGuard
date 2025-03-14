@@ -287,33 +287,34 @@
 	#This is crucial to prevent search engines from indexing your backend
 	RewriteRule ^/(ignite|wp-admin) - [F,L]
 	# # # END DOMAIN REWRITES # # # 
+
 # --------------------------------
-# [WEPP/AVIF] - Image File Rewrites
+# [IMAGE REWRITE] - WEBP, AVIF, or Fallback
 # --------------------------------
-	# Check for AVIF browser support, and rewrite
-	RewriteCond %{HTTP:Accept} image/avif
-	RewriteCond %{DOCUMENT_ROOT}/$1.avif -f
-	RewriteRule (.+)\.(jpe?g|png|gif|svg)$ $1.avif [T=image/avif,E=image_optimized:1,L]
-	# Check for webp browser support, and rewrite
-	RewriteCond %{HTTP:Accept} image/webp
-	RewriteCond %{DOCUMENT_ROOT}/$1.webp -f
-	RewriteRule (.+)\.(jpe?g|png|gif|svg)$ $1.webp [T=image/webp,E=image_optimized:1,L]
-	# Fallback to original image
-	RewriteCond %{ENV:image_optimized} !1
-	RewriteRule (.+)\.(jpe?g|png|gif|svg)$ $1.$2 [L]
-	# # # END IMAGE REWRITES # # # 
-#
-</IfModule>
-#
-# # # END REWRITES # # #
-#
-# --------------------------------
-# [HEADERS] - Image File Rewrites
-# --------------------------------
-<IfModule mod_headers.c>
-  Header append Vary Accept env=image_optimized
+
+# Ensure manual WebP/AVIF delivery
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Check for AVIF browser support, and rewrite
+    RewriteCond %{HTTP:Accept} image/avif
+    RewriteCond %{DOCUMENT_ROOT}/$1.avif -f
+    RewriteRule (.+)\.(jpe?g|png|gif|svg)$ $1.avif [T=image/avif,E=image_optimized:1,L]
+
+    # Check for WebP browser support, and rewrite
+    RewriteCond %{HTTP:Accept} image/webp
+    RewriteCond %{DOCUMENT_ROOT}/$1.webp -f
+    RewriteRule (.+)\.(jpe?g|png|gif|svg)$ $1.webp [T=image/webp,E=image_optimized:1,L]
+
+    # Fallback to original image
+    RewriteCond %{ENV:image_optimized} !1
+    RewriteRule (.+)\.(jpe?g|png|gif|svg)$ $1.$2 [L]
 </IfModule>
 
+# Ensure the Vary Header is set for proper caching
+<IfModule mod_headers.c>
+    Header append Vary Accept env=image_optimized
+</IfModule>
 <IfModule mod_mime.c>
   AddType image/webp .webp
   AddType image/avif .avif
@@ -325,35 +326,119 @@
 # [SECURITY REWRITE] - Final Security Rewrites
 # --------------------------------
 <IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Prevent Trackback Spam
+    RewriteCond %{REQUEST_METHOD} =POST
+    RewriteCond %{HTTP_USER_AGENT} !(curl|wget|bot|spider|crawler) [NC]
+    RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /.+/trackback/?\ HTTP/ [NC]
+    RewriteRule .* - [F,L]
 
-RewriteEngine On
+    # Block Malicious Image Uploads with Embedded PHP
+    RewriteCond %{HTTP:Content-Disposition} \.php [NC]
+    RewriteCond %{HTTP:Content-Type} ^image/ [NC]
+    RewriteRule .* - [F,L]
 
-# Redirect invalid requests to a custom error page
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^.*$ /error.php [L]
-
-# Trackback spam prevention
-RewriteCond %{REQUEST_METHOD} =POST
-RewriteCond %{HTTP_USER_AGENT} ^.*(opera|mozilla|firefox|msie|safari).*$ [NC]
-RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /.+/trackback/?\ HTTP/ [NC]
-RewriteRule .? - [F,NS,L]
-
-# Bogus graphics exploit prevention
-RewriteCond %{HTTP:Content-Disposition} \.php [NC]
-RewriteCond %{HTTP:Content-Type} image/.+ [NC]
-RewriteRule .? - [F,NS,L]
-
-# Deny requests without HTTP_HOST header
-RewriteCond %{REQUEST_URI} !^/(wp-login.php|wp-admin/|wp-content/plugins/|wp-includes/).* [NC]
-RewriteCond %{HTTP_HOST} ^$
-RewriteRule .? - [F,NS,L]
+    # Deny Requests Without HTTP_HOST (Prevents Host Header Attacks)
+    RewriteCond %{HTTP_HOST} ^$
+    RewriteCond %{REQUEST_URI} !^/(wp-login.php|wp-admin/|wp-content/plugins/|wp-includes/) [NC]
+    RewriteRule .* - [F,L]
+</IfModule>
 
 # Deny POST requests without Content-Length
 RewriteCond %{REQUEST_METHOD} =POST
 RewriteCond %{HTTP:Content-Length} ^$
 RewriteCond %{REQUEST_URI} !^/(wp-admin/|wp-content/plugins/|wp-includes/).* [NC]
 RewriteRule .? - [F,NS,L]
+</IfModule>
+
+
+
+
+
+        # --------------------------------
+	# [CORS]
+	# --------------------------------
+	# OPTIONS Enable Cors - uncomment one option
+
+        # OPTION 1
+	Header add Access-Control-Allow-Origin "*" 
+
+        # OPTION 2 
+        <IfModule mod_setenvif.c>
+	    # Capture the Origin header dynamically
+	    SetEnvIf Origin "^https?://(.*)$" OriginHeader=$0
+	</IfModule>
+
+# --------------------------------
+# [HEADERS] 
+# --------------------------------
+	
+	<IfModule mod_headers.c>
+	    # Apply Access-Control-Allow-Origin dynamically based on Origin header
+	    Header always set Access-Control-Allow-Origin "%{OriginHeader}e" env=OriginHeader
+	
+	    # Restrict CORS to only images (Prevents hotlinking abuse)
+	    <FilesMatch "\.(bmp|cur|gif|ico|jpe?g|a?png|svgz?|webp|heic|heif|avif)$">
+	        SetEnvIf Origin ":" IS_CORS
+	        Header set Access-Control-Allow-Origin "*" env=IS_CORS
+	        Header set Vary "Origin" env=IS_CORS
+	    </FilesMatch>
+	</IfModule>
+
+
+	## Pre-check Handling Options for the CORS
+       <IfModule mod_rewrite.c>
+	    # Handle CORS Preflight Requests (OPTIONS method)
+	    RewriteCond %{REQUEST_METHOD} OPTIONS
+	    RewriteRule ^(.*)$ - [R=204,L]
+	</IfModule>
+
+# Specify the CORS Headers
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Methods "GET, PUT, POST, OPTIONS, DELETE"  # Added DELETE for full REST support
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Custom-Header, DNT, Keep-Alive, User-Agent, X-Requested-With, If-Modified-Since, Cache-Control, Upgrade-Insecure-Requests"
+    Header always set Access-Control-Allow-Credentials "true"
+    Header set Access-Control-Max-Age "1728000"
+
+    # Enforce HTTPS (HSTS)
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+    # Secure Cookies
+    Header always edit Set-Cookie "(.*)" "$1; Secure; HttpOnly"
+
+    # Improved Referrer Policy (avoid info leaks)
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Enforce Certificate Transparency (CT)
+    Header always set Expect-CT "max-age=86400, enforce"
+
+    # Allow timing metrics for performance measurement
+    Header set Timing-Allow-Origin "*"
+</IfModule>
+      
+<IfModule mod_headers.c>
+    # Security Headers
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Permitted-Cross-Domain-Policies "none"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), autoplay=(), payment=()"
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+    Header always set Cross-Origin-Resource-Policy "same-origin"
+    Header always set Cross-Origin-Embedder-Policy "require-corp"
+    Header always set Expect-CT "max-age=86400, enforce"
+
+    # Disable XSS Protection (Modern browsers handle it natively)
+    Header always set X-XSS-Protection "0"
+
+    # Content Security Policy (CSP) – Adjust as needed
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'self';"
+
+    # CORS for Fonts
+    <FilesMatch "\.(eot|otf|ttf|ttc|woff|woff2)$">
+        Header always set Access-Control-Allow-Origin "*"
+    </FilesMatch>
 </IfModule>
 
 # --------------------------------
@@ -368,123 +453,5 @@ RewriteRule .? - [F,NS,L]
 <FilesMatch "^(wp-config\.php|\.htaccess|\.htpasswd|debug\.log)$">
     Require all denied
 </FilesMatch>
-
-# --------------------------------
-# [HEADERS] 
-# --------------------------------
-<IfModule mod_headers.c>
-	Header set Content-Language "en-US"
-
-	# Reinforce file type and charset
-	AddDefaultCharset UTF-8
-	AddType 'text/html; charset=UTF-8' .html
-	AddCharset UTF-8 .html .php
-
-        # remove server information for security protection
-        Header unset Server	
-	# remove other headers which indicate plugins
-	Header always unset WP-Super-Cache
-	
-	# XMLRPC Pingback
-	Header always unset X-Pingback
-	Header set X-Pingback "https://example.com/xmlrpc.php"
-	
-        # Content Security policy and Feature Policy
-        Header always set Content-Security-Policy "default-src 'self'"
-        # OR
-        #Header set Content-Security-Policy "default-src * data:; script-src https: 'unsafe-inline' 'unsafe-eval'; style-src https: 'unsafe-inline'"
-  
-        #Header set Feature-Policy "camera '*'; fullscreen '*'; geolocation *; microphone '*'; autoplay *"
-
-        # --------------------------------
-	# [CORS]
-	# --------------------------------
-	# OPTIONS Enable Cors - uncomment one option
-
-        # OPTION 1
-	Header add Access-Control-Allow-Origin "*" 
-
-        # OPTION 2 
-        # Capture the current request's origin domain dynamically
-	<IfModule mod_setenvif.c>
-
-        	SetEnvIf Origin "^https?://(.*)$" OriginHeader=$0
-    
-	        # Apply Access-Control-Allow-Origin dynamically based on the Origin header
-	        Header always set Access-Control-Allow-Origin %{OriginHeader}e env=OriginHeader
-
-		# There is a security reason for this I forgot from Mozilla
-		<FilesMatch "\.(bmp|cur|gif|ico|jpe?g|a?png|svgz?|webp|heic|heif|avif)$">
-		   SetEnvIf Origin ":" IS_CORS
-		   Header set Access-Control-Allow-Origin "*" env=*IS_CORS*
-		</FilesMatch>
-	</IfModule>
-
-	## Pre-check Handling Options for the CORS
-        <IfModules mod_rewrite.c>
-
-          ## Allows for Pre-check to setup CORS requests
-          RewriteCond %{REQUEST_METHOD} OPTIONS
-          RewriteRule ^(.*)$ $1 [L,R=204]
-        <IfModules>
-
-	# Specify the CORS Headers
-        Header set Access-Control-Allow-Methods "GET,PUT,POST,OPTIONS" # Add DELETE if needed
-        Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Custom-Header,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,C$" Upgrade-Insecure-Requests
-        Header always set Access-Control-Allow-Credentials true
-        Access-Control-Max-Age: 1728000
-
-	Header set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-
-        ## Always set Secure Cookies
-        Header always edit Set-Cookie (.*) "$1, Secure; httponly"
-
-        Header set Referrer-Policy "no-referrer, strict-origin-when-cross-origin"
-	Header always set Expect-CT "enforce, max-age=0"
-
-	# Allow timing
- 	Header set Timing-Allow-Origin: "*"
-      
-  	# Set Security Headers
-        Header set X-Content-Type-Options "nosniff"
-        Header set X-XSS-Protection "1; mode=block"
-        Header set Referrer-Policy "no-referrer, strict-origin-when-cross-origin"
-        Header set X-Frame-Options "SAMEORIGIN"
-        Header set X-Permitted-Cross-Domain-Policies "none"
-
-	# For fonts set any origin
-	<FilesMatch "\.(eot|otf|tt[cf]|woff2?)$">
-	  Header set Access-Control-Allow-Origin "*"
-	</FilesMatch>
-	
-	Header always set Expect-CT "enforce, max-age=0"
-        # FileETag None is not enough for every server.
-        Header unset ETag
-        # Since we`re sending far-future expires, we don't need ETags for static content.
-        # developer.yahoo.com/performance/rules.html#etags
-        FileETag None
-
-	# --------------------------------
-	# COOP and COEP - independent of eachother, can be tested and deployed separately.
-	# --------------------------------
-	# "When set together on a top-level document, COEP and COOP ensure that neither the document
-	# nor any of its descendents can load resources which haven't opted in, and that navigations 
-	# to any top-level document that doesn't both come from the same origin and set COEP will be 
-	# performed in a new browsing context group (and consequently, different process)."
-	# CITE - https://docs.google.com/document/d/1zDlfvfTJ_9e8Jdc8ehuV4zMEu9ySMCiTGMS9y0GU92k/edit?pli=1&tab=t.0
-	# READ - https://resourcepolicy.fyi/
-
-	# [COOP]
-	# See Mozilla  - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy
-	#Header set Cross-Origin-Opener-Policy: same-origin-allow-popups; report-to="https://domain.com/reports/"
-	
-	# [COEP]
-	# See Mozilla - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
-	#Header set Cross-Origin-Embedder-Policy: require-corp; report-to="https://domain.com/reports/"
-
-	# Developers can detect whether the headers are set correctly and they are in a COOP plus COEP 
-	# environment through the self.crossOriginIsolated API.
-  
-</IfModule>
 
 # END
