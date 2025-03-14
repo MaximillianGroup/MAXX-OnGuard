@@ -359,15 +359,14 @@ RewriteRule .? - [F,NS,L]
 # --------------------------------
 # [FILE BLOCK] - Block specific files from being accessed directly
 # --------------------------------
-<FilesMatch "\.(md|exe|sh|bak|inc|pot|po|mo|log|sql|htaccess|htpasswd|ini|phps|fla|psd|sh|cgi)$">
-    Order Deny,Allow
-    Deny from All
-    Allow from env=REDIRECT_STATUS
+# Block specific file types from direct access
+<FilesMatch "\.(md|exe|sh|bak|inc|pot|po|mo|log|sql|htaccess|htpasswd|ini|phps|fla|psd|cgi)$">
+    Require all denied
 </FilesMatch>
+
+# Block wp-config.php, .htaccess, .htpasswd, and debug.log
 <FilesMatch "^(wp-config\.php|\.htaccess|\.htpasswd|debug\.log)$">
-  Order Deny,Allow
-  Deny from All
-  Allow from env=REDIRECT_STATUS
+    Require all denied
 </FilesMatch>
 
 # --------------------------------
