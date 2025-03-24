@@ -1,0 +1,172 @@
+<IfModule mod_rewrite.c>
+
+    # Disable server signature to prevent information disclosure ServerSignature Off # Set Timezone
+    <IfModule mod_setenv.c>
+        SetEnv TZ "UTC"
+    </IfModule>
+    # Disable directory listing and unnecessary multi-view handling for security Options +FollowSymLinks -Indexes # Secure directory by disabling script execution for certain file types AddHandler cgi-script .php .pl .py .jsp .asp .htm .shtml .sh .cgi Options
+    -ExecCGI # DirectoryIndex: sets the file that Apache will serve if a directory is requested. DirectoryIndex index.html index.php /index.php # Protect against DOS attacks by limiting file upload size (10MB) LimitRequestBody 20240000 # If audio / video
+    increase to 100MB
+    <FilesMatch "\.(mp3|mp4|avi|acc|flac|wav|ogg)$">
+        LimitRequestBody 102400000
+    </FilesMatch>
+
+    RewriteEngine On # Keep this one # Redirect only frontend URLs from sparxstar.com to casanovaandrosetta.com #RewriteCond %{HTTP_HOST} ^casanovaandrosetta\.sparxstar\.com$ [NC] #RewriteRule ^(?!ignite|wp-admin|wp-content|wp-includes)(.*)$ https://casanovaandrosetta.com/$1
+    [L,R=301]
+
+</IfModule>
+
+# [SPELLCHECK] OPTIONAL - Enable automatic spelling correction for URLs
+<IfModule mod_speling.c>
+    CheckSpelling On
+</IfModule>
+
+# DEFLATE by Filter Type
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/json application/javascript application/x-javascript
+</IfModule>
+
+<IfModule mod_headers.c>
+
+    <IfModule mod.rewrite.c>
+        <FilesMatch "\.(js|css|xml|svg|wasm)$">
+            # serve brotli as primary ensure no double compression RewriteCond %{HTTP:Accept-encoding} br RewriteCond %{REQUEST_FILENAME}.br -f RewriteRule ^(.*)$ $1.br [T=application/x-brotli,E=no-gzip:1,L] # serve gzip as alternative, ensure no double compression
+            RewriteCond %{HTTP:Accept-encoding} gzip RewriteCond %{REQUEST_FILENAME}.gz -f RewriteRule ^(.*)$ $1.gz [T=application/x-gzip,E=no-brotli:1,L]
+        </FilesMatch>
+
+        <FilesMatch "(\.js\.br|\.css\.br|\.xml\.br|.svg\.br|\.wasm\.br)$">
+            # Serve correct encoding type. Header append Content-Encoding br
+        </FilesMatch>
+
+        <FilesMatch "(\.js\.gz|\.css.gz|\.xml\.gz|\.svg\.gz|\.wasm\.gz)$">
+            # Serve correct encoding type. Header append Content-Encoding gz
+        </FilesMatch>
+
+        # Force proxies to cache brotli & # non-brotli css/js files separately. Header append Vary Accept-Encoding
+    </IfModule>
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On # Images ExpiresByType image/gif "access plus 1 year" ExpiresByType image/png "access plus 1 year" ExpiresByType image/jpeg "access plus 1 year" ExpiresByType image/jpg "access plus 1 year" ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/avif "access plus 1 year" ExpiresByType image/svg+xml "access plus 1 year" ExpiresByType image/x-icon "access plus 1 year" # Fonts ExpiresByType font/ttf "access plus 1 year" ExpiresByType font/otf "access plus 1 year" ExpiresByType
+    font/woff "access plus 1 year" ExpiresByType font/woff2 "access plus 1 year" ExpiresByType application/font-woff "access plus 1 year" # Videos & Audio ExpiresByType video/mp4 "access plus 1 year" ExpiresByType video/webm "access plus 1 year" ExpiresByType
+    audio/mp3 "access plus 1 year" ExpiresByType audio/ogg "access plus 1 year" ExpiresByType audio/wav "access plus 1 year" ExpiresByType audio/flac "access plus 1 year" # CSS, JS ExpiresByType text/css "access plus 1 year" ExpiresByType text/javascript
+    "access plus 1 year" ExpiresByType application/javascript "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(js|css|gif|png|jpg|jpeg|avif|webp|webm|mp4|mp3|ogg|wav|flac|svg|woff|woff2|ttf|eot|ico)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
+# BEGIN WordPress # BEGIN WordPress RewriteEngine On # Preserve Authorization Header RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}] # Set Base Directory RewriteBase / # Main WordPress Index Rule RewriteRule ^index\.php$ - [L] # Add trailing
+slash to /wp-admin RewriteRule ^wp-admin$ wp-admin/ [R=301,L] # Skip Direct Files and Directories RewriteCond %{REQUEST_FILENAME} -f [OR] RewriteCond %{REQUEST_FILENAME} -d RewriteRule ^ - [L] # Allow Access to WordPress Core Files RewriteRule ^(wp-(content|admin|includes)/.*)
+$1 [L] # Process PHP Files RewriteRule ^(.*\.php)$ $1 [L] # Catch-All Rule for WordPress RewriteRule . /index.php [L] # END WordPress # END WordPress
+
+<IfModule mod_headers.c>
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+</IfModule>
+
+
+# Image handling
+<IfModule mod_rewrite.c>
+    RewriteEngine On RewriteBase / # Redirect HTTP to HTTPS RewriteCond %{HTTPS} off RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301] #This is crucial to prevent search engines from indexing your backend #RewriteRule ^/(ignite|wp-admin) - [F,L]
+    # Check for AVIF first, then WebP RewriteCond %{HTTP:Accept} image/avif RewriteCond %{DOCUMENT_ROOT}/$1.avif -f RewriteRule (.+)\.(jpe?g|png|gif|svg)$ $1.avif [T=image/avif,E=image_optimized:1,L] RewriteCond %{HTTP:Accept} image/webp RewriteCond %{DOCUMENT_ROOT}/$1.webp
+    -f RewriteRule (.+)\.(jpe?g|png|gif|svg)$ $1.webp [T=image/webp,E=image_optimized:1,L] # Fallback to original image RewriteCond %{ENV:image_optimized} !1 RewriteRule (.+)\.(jpe?g|png|gif|svg)$ $1.$2 [L]
+
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header append Vary Accept env=image_optimized
+</IfModule>
+
+<IfModule mod_mime.c>
+    # Reinforce file type and charset AddDefaultCharset UTF-8 AddType 'text/html; charset=UTF-8' .html AddCharset UTF-8 .html .php AddType image/webp .webp AddType image/avif .avif AddType text/css .css .min.css AddType application/javascript .js .min.js
+</IfModule>
+
+
+# -------------------------------- # [HEADERS] # --------------------------------
+<IfModule mod_headers.c>
+    Header set Content-Language "en-US" # remove server information for security protection Header unset Server # remove other headers which indicate plugins #Header always unset WP-Super-Cache # XMLRPC Pingback Header always unset X-Pingback #Header set
+    X-Pingback "https://example.com/xmlrpc.php" # Content Security policy and Feature Policy #Header always set Content-Security-Policy "default-src 'self'" # OR #Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; script-src
+    'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';" Header set Feature-Policy "camera '*'; fullscreen '*'; geolocation *; microphone '*'; autoplay *"
+</IfModule>
+
+# ------------------------------- # [CORS] # -------------------------------
+<IfModule mod_setenvif.c>
+    # Define allowed origins 
+    # sparxstar.com and all subdomains: 
+    SetEnvIf Origin "^https://([a-z0-9.-]+)\.sparxstar\.com$" ALLOWED_ORIGIN=$0 
+    # Other specific domains: 
+    SetEnvIf Origin "^https://casanovaandrosetta\.com$" ALLOWED_ORIGIN=$0 
+    SetEnvIf Origin "^https://barbarabarrett\.org$" ALLOWED_ORIGIN=$0  
+    SetEnvIf Origin "^https://sparxstar\.com$" ALLOWED_ORIGIN=$0 
+    SetEnvIf Origin "^https://news\.cellualarvibrations\.com$" ALLOWED_ORIGIN=$0 
+    SetEnvIf Origin "^https://news\.maximilliangroup\.us$" ALLOWED_ORIGIN=$0 
+    SetEnvIf Origin "^https://news\.afrobeatsafrica\.com$"
+    ALLOWED_ORIGIN=$0 SetEnvIf Origin "^https://earth\.maximilliangroup\.us$" ALLOWED_ORIGIN=$0
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Credentials "true" 
+    Header always set Access-Control-Max-Age "1728000" # CORS Headers - ONLY set if ALLOWED_ORIGIN is defined
+    <If "%{ENV:ALLOWED_ORIGIN} != ''">
+        Header always set Access-Control-Allow-Origin "%{ENV:ALLOWED_ORIGIN}e"
+    </If>
+
+    # Preflight request handling
+    <IfModule mod_rewrite.c>
+        RewriteEngine On RewriteCond %{REQUEST_METHOD} OPTIONS RewriteRule .* - [env=IS_PREFLIGHT:true]
+    </IfModule>
+
+    <If "%{ENV:IS_PREFLIGHT} == 'true'">
+        Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE" 
+        Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Custom-Header, DNT, X-Requested-With"
+    </If>
+
+    # Security Headers 
+    Header always set Referrer-Policy "strict-origin-when-cross-origin" 
+    Header always set Expect-CT "max-age=86400, enforce" 
+    Header always set X-Content-Type-Options "nosniff" 
+    Header always set X-XSS-Protection "0" Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Permitted-Cross-Domain-Policies "none" 
+    Header always edit Set-Cookie "(.*)" "$1; HttpOnly; Secure; SameSite=Lax" # secure cookies 
+    Header unset ETag 
+    # remove ETags 
+    FileETag None
+</IfModule>
+
+## FORCE ONESIGNAL UTF-8
+<Files OneSignalSDKWorker.js.php>
+    Allow from all ForceType 'application/javascript; charset=UTF-8'
+</Files>
+<Files OneSignalSDKWorker.js>
+    Allow from all ForceType 'application/javascript; charset=UTF-8'
+</Files>
+
+## WP Defender - Protect PHP Executed ##
+
+<Files *.php>
+    Order allow,deny Deny from all
+</Files>
+
+## WP Defender - End ## ## WP Defender - Prevent information disclosure ##
+
+<FilesMatch "\.(md|exe|sh|bak|inc|pot|po|mo|log|sql|htaccess|ini|conf|pool|jail|env|d)$">
+    Order allow,deny Deny from all
+</FilesMatch>
+
+<Files robots.txt>
+    Allow from all
+</Files>
+
+<Files ads.txt>
+    Allow from all
+</Files>
+
+## WP Defender - End ##
+
+<Files security.txt>
+    Allow from all
+</Files>
