@@ -1,3 +1,17 @@
+######################################################################
+# .htaccess
+#
+# WordPress .htaccess file
+#
+# Author:         Starisian Technology Max Barrett <support@starisian.com>
+# License:        MIT License
+# Coppyright:     Copyright (c) 2024-2026 Starisian Technologies
+# Version         1.8.0
+# Server          Unbutu 
+# Stack           Cloudflare -> Varnish -> Nginx -> Apache2 -> php-fpm 
+                     -> Redis -> WordPress ->MariaDB
+######################################################################
+
 ServerSignature Off
 
 <IfModule mod_rewrite.c>
@@ -14,17 +28,21 @@ ServerSignature Off
 
     DirectoryIndex index.html index.php
 
-    LimitRequestBody 20240000
+    LimitRequestBody 102400000 
+    # Set to ~100MB (Cloudflare Limit)
 
-    <FilesMatch "\.(mp3|mp4|avi|acc|flac|wav|ogg)$">
-        LimitRequestBody 102400000
-    </FilesMatch>
 </IfModule>
 
-# -------------------------------
+<IfModule mod_security.c>
+    SecRuleEngine Off
+
+</IfModule>
+
+######################################################################
 # [8G FIREWALL] v1.3 20240222
 # https://perishablepress.com/8g-firewall/
-# -------------------------------
+######################################################################
+
 # 8G:[USER AGENT]
 <IfModule mod_rewrite.c>
 
@@ -93,98 +111,118 @@ ServerSignature Off
 
 </IfModule>
 
+######################################################################
+# GZIP / Brotli Compression 
+######################################################################
 
 # mod_deflate compression
-<IfModule mod_deflate.c>
-    SetOutputFilter DEFLATE
+#<IfModule mod_deflate.c>
+#    SetOutputFilter DEFLATE
 
-    <IfModule mod_setenvif.c>
-        <IfModule mod_headers.c>
-            SetEnvIfNoCase ^(Accept-EncodXng|X-cept-Encoding|X{15}|~{15}|-{15})$ ^((gzip|deflate)\s*,?\s*)+|[X~-]{4,13}$ HAVE_Accept-Encoding
-            RequestHeader append Accept-Encoding "gzip,deflate" env=HAVE_Accept-Encoding
-        </IfModule>
-    </IfModule>
+#    <IfModule mod_setenvif.c>
 
-    <IfModule mod_filter.c>
-        AddOutputFilterByType DEFLATE "application/atom+xml" \
-                                      "application/javascript" \
-                                      "application/json" \
-                                      "application/ld+json" \
-                                      "application/manifest+json" \
-                                      "application/rdf+xml" \
-                                      "application/rss+xml" \
-                                      "application/schema+json" \
-                                      "application/vnd.geo+json" \
-                                      "application/vnd.ms-fontobject" \
-                                      "application/x-font-ttf" \
-                                      "application/x-font-opentype" \
-                                      "application/x-font-truetype" \
-                                      "application/x-javascript" \
-                                      "application/x-web-app-manifest+json" \
-                                      "application/xhtml+xml" \
-                                      "application/xml" \
-                                      "font/eot" \
-                                      "font/opentype" \
-                                      "font/otf" \
-                                      "image/bmp" \
-                                      "image/svg+xml" \
-                                      "image/vnd.microsoft.icon" \
-                                      "image/x-icon" \
-                                      "text/cache-manifest" \
-                                      "text/css" \
-                                      "text/html" \
-                                      "text/javascript" \
-                                      "text/plain" \
-                                      "text/vcard" \
-                                      "text/vnd.rim.location.xloc" \
-                                      "text/vtt" \
-                                      "text/x-component" \
-                                      "text/x-cross-domain-policy" \
-                                      "text/xml"
-    </IfModule>
+#        <IfModule mod_headers.c>
+#            SetEnvIfNoCase ^(Accept-Encoding|X-cept-Encoding|X{15}|~{15}|-{15})$ ^((gzip|deflate)\s*,?\s*)+|[X~-]{4,13}$ HAVE_Accept-Encoding
+#            RequestHeader append Accept-Encoding "gzip,deflate" env=HAVE_Accept-Encoding
+#        </IfModule>
 
-    <IfModule mod_mime.c>
-        AddEncoding gzip svgz
-    </IfModule>
-</IfModule>
+#    </IfModule>
+
+#    <IfModule mod_filter.c>
+#        AddOutputFilterByType DEFLATE "application/atom+xml" \
+#                                      "application/javascript" \
+#                                      "application/json" \
+#                                      "application/ld+json" \
+#                                      "application/manifest+json" \
+#                                      "application/rdf+xml" \
+#                                      "application/rss+xml" \
+#                                      "application/schema+json" \
+#                                      "application/vnd.geo+json" \
+#                                      "application/vnd.ms-fontobject" \
+#                                      "application/x-font-ttf" \
+#                                      "application/x-font-opentype" \
+#                                      "application/x-font-truetype" \
+#                                      "application/x-javascript" \
+#                                      "application/x-web-app-manifest+json" \
+#                                      "application/xhtml+xml" \
+#                                      "application/xml" \
+#                                      "font/eot" \
+#                                      "font/opentype" \
+#                                      "font/otf" \
+#                                      "image/bmp" \
+#                                      "image/svg+xml" \
+#                                      "image/vnd.microsoft.icon" \
+#                                      "image/x-icon" \
+#                                      "text/cache-manifest" \
+#                                      "text/css" \
+#                                      "text/html" \
+#                                      "text/javascript" \
+#                                      "text/plain" \
+#                                      "text/vcard" \
+#                                      "text/vnd.rim.location.xloc" \
+#                                      "text/vtt" \
+#                                      "text/x-component" \
+#                                      "text/x-cross-domain-policy" \
+#                                      "text/xml"
+#    </IfModule>
+
+#    <IfModule mod_mime.c>
+#        AddEncoding gzip svgz
+#    </IfModule>
+
+#</IfModule>
 
 # Dynamically serves Brotli/gzip if precompressed files exist.
 # Fallbacks to mod_deflate for other content.
 # Maintains browser and proxy compatibility via Vary.
-<IfModule mod_rewrite.c>
-        RewriteEngine On
-        RewriteBase /
+#<IfModule mod_rewrite.c>
+#        RewriteEngine On
+#        RewriteBase /
         
-        <FilesMatch "\.(js|css|xml|svg|wasm)$">
-            RewriteCond %{HTTP:Accept-encoding} br
-            RewriteCond %{REQUEST_FILENAME}.br -f
-            RewriteRule ^(.*)$ $1.br [T=application/x-brotli,E=no-gzip:1,L]
+#        <FilesMatch "\.(js|css|xml|svg|wasm)$">
+#            RewriteCond %{HTTP:Accept-encoding} br
+#            RewriteCond %{REQUEST_FILENAME}.br -f
+#            RewriteRule ^(.*)$ $1.br [T=application/x-brotli,E=no-gzip:1,L]
 
-            RewriteCond %{HTTP:Accept-encoding} gzip
-            RewriteCond %{REQUEST_FILENAME}.gz -f
-            RewriteRule ^(.*)$ $1.gz [T=application/x-gzip,E=no-brotli:1,L]
-        </FilesMatch>
+#            RewriteCond %{HTTP:Accept-encoding} gzip
+#            RewriteCond %{REQUEST_FILENAME}.gz -f
+#            RewriteRule ^(.*)$ $1.gz [T=application/x-gzip,E=no-brotli:1,L]
+#        </FilesMatch>
+
+#</IfModule>
+
+#<IfModule mod_headers.c>
+#        <FilesMatch "\.(js\.br|css\.br|xml\.br|svg\.br|wasm\.br)$">
+#            Header append Content-Encoding br
+#        </FilesMatch>
+
+#        <FilesMatch "\.(js\.gz|css\.gz|xml\.gz|svg\.gz|wasm\.gz)$">
+#            Header append Content-Encoding gzip
+#        </FilesMatch>
+
+#        Header append Vary Accept-Encoding
+
+#</IfModule>
+
+# Domain Redirects
+
+<IfModule mod_rewrite.c>
+    # Redirect only the front-end (exclude wp-admin and wp-login.php)
+    RewriteEngine On
+
+    # Mixed Content Prevention (Force HTTPS)
+    #RewriteCond %{HTTPS} off
+    #RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
 </IfModule>
+######################################################################
+# WordPress MultiSite
+######################################################################
 
-<IfModule mod_headers.c>
-        <FilesMatch "\.(js\.br|css\.br|xml\.br|svg\.br|wasm\.br)$">
-            Header append Content-Encoding br
-        </FilesMatch>
-
-        <FilesMatch "\.(js\.gz|css\.gz|xml\.gz|svg\.gz|wasm\.gz)$">
-            Header append Content-Encoding gzip
-        </FilesMatch>
-
-        Header append Vary Accept-Encoding
-</IfModule>
-
-# BEGIN WordPress
+# BEGIN WordPress Multisite
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    
-    # Preserve Authorization Header
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-    
     RewriteBase /
     RewriteRule ^index\.php$ - [L]
     
@@ -197,10 +235,13 @@ ServerSignature Off
     RewriteRule ^(wp-(content|admin|includes).*) $1 [L]
     RewriteRule ^(.*\.php)$ $1 [L]
     RewriteRule . index.php [L]
-</IfModule>
-# END WordPress
 
+</IfModule>
+# END WordPress Multisite
+
+######################################################################
 # Security Rewrites
+######################################################################
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
@@ -209,9 +250,13 @@ ServerSignature Off
     RewriteCond %{HTTP:Content-Disposition} \.php [NC]
     RewriteCond %{HTTP:Content-Type} ^image/ [NC]
     RewriteRule .* - [F,L]
+
 </IfModule>
 
-# Image Rewrites
+######################################################################
+# Image Rewrites & Headers
+######################################################################
+
 # Ensure manual WebP/AVIF delivery
 <IfModule mod_rewrite.c>
   RewriteEngine On
@@ -233,153 +278,147 @@ ServerSignature Off
   
 </IfModule>
 
-# Ensure the Vary Header is set for proper caching
-    <FilesMatch "\.(jpe?g|svg|webp|gif|avif)$">
-        <IfModule mod_headers.c>
-          Header append Vary Accept env=image_optimized
-        </IfModule>
-   </FilesMatch>
-
-
+######################################################################
 # Headers
+######################################################################
+# Ensure the Vary Header is set for proper caching
+<FilesMatch "\.(jpe?g|svg|webp|gif|avif)$">
+    <IfModule mod_headers.c>
+      Header append Vary Accept env=image_optimized
+    </IfModule>
+</FilesMatch>
+
 <IfModule mod_headers.c>
     Header set Content-Language "en-US"
 
     # remove server information for security protection
+    Header unset X-Powered-By
     Header unset Server
-
+    Header set X-Backend "Apache"
     # force UTF-8
-    Header set Content-Type "text/html; charset=UTF-8"
-    Header set Content-Type "application/xhtml+xml; charset=UTF-8"
-    Header set Content-Type "application/xml; charset=UTF-8"
-    Header set Content-Type "text/xml; charset=UTF-8"
-    Header set Content-Type "application/atom+xml; charset=UTF-8"
-    Header set Content-Type "application/rss+xml; charset=UTF-8"
-    Header set Content-Type "application/json; charset=UTF-8"
-    Header set Content-Type "text/plain; charset=UTF-8"
-    
+     
     # Force the latest IE version, in various cases when it may fall back to IE7 mode
     # futher details: github.com/rails/rails/commit/123eb25#commitcomment-118920
     # Use ChromeFrame if it's installed for a better experience for the poor IE folks
     Header set X-UA-Compatible "IE=Edge,chrome=1"
+
     # mod_headers cannnot match by content-type, but we don't want to send this header on *everything*...
     <FilesMatch "\.(js|css|gif|png|jpe?g|pdf|xml|oga|ogg|m4a|ogv|mp4|m4v|webm|svg|svgz|eot|ttf|otf|woff|ico|webp|appcache|manifest|htc|crx|oex|xpi|safariextz|vcf)$" >
         Header unset X-UA-Compatible
     </FilesMatch>
+
+    # OUTDATED BUT SOMETIMES USED
     #Header set P3P "policyref="/w3c/p3p.xml", CP="NOI DSP COR NID CUR ADM DEV OUR BUS""
     # OR THIS, SIMPLER
     # Header set P3P "policyref="/w3c/p3p.xml""
 
-    # Content Security policy and Feature Policy
-    #Header always set Content-Security-Policy "default-src 'self'"
-    # OR
-    #Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
-     # Content Security Policy (CSP) – Adjust as needed
-    #Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-ancestors 'self';"
+    ######################################################################
+    #   SECURITY HEADERS - CSP, NEL & Reporting
+    #   Content Security policy and Feature Policy
+    ######################################################################
+
+    # 1. Modern Reporting API Header (Report-To)
+    #    Defines the endpoint where all browser reports (CSP, NEL, etc.) will be sent.
+    Header always set Report-To "{\"group\":\"default\",\"max_age\":31536000,\"endpoints\":[{\"url\":\"https://YOUR-DOMAIN.report-uri.com/a/d/g\"}],\"include_subdomains\":true}"
     
-    Header set Feature-Policy "camera '*'; fullscreen '*'; geolocation *; microphone '*'; autoplay *"
+    # 2. Network Error Logging (NEL)
+    #    Instructs the browser to send reports about network failures to the 'default' group defined above.
+    Header always set NEL "{\"report_to\":\"default\",\"max_age\":31536000,\"include_subdomains\":true}"
+    
+    # 3. Content Security Policy (in Report-Only mode for safe testing)
+    #    This is the complete, merged policy in the required single-line format.
+    #Header always set Content-Security-Policy-Report-Only "default-src 'self' https://*.YOUR-DOMAIN.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.YOUR-DOMAIN.com https://hb.wpmucdn.com https://stats.wpmucdn.com https://analytics.wpmucdn.com https://cdn.onesignal.com https://onesignal.com https://js-agent.newrelic.com https://www.clarity.ms https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com https://challenges.cloudflare.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' blob: https://*.YOUR-DOMAIN.com https://hb.wpmucdn.com https://cdnjs.cloudflare.com https://fonts.googleapis.com https://onesignal.com; font-src 'self' data: https://*.YOUR-DOMAIN.com https://fonts.gstatic.com https://static2.sharepointonline.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://*.YOUR-DOMAIN.com https://*.smushcdn.com https://secure.gravatar.com https://www.googletagmanager.com; connect-src 'self' https://*.YOUR-DOMAIN.com https://bam.nr-data.net https://stats3.wpmudev.com https://analytics3.wpmudev.com https://l.clarity.ms https://challenges.cloudflare.com https://www.google-analytics.com https://static.cloudflareinsights.com; media-src 'self' blob: https://*.YOUR-DOMAIN.com; frame-src 'self' blob: https://*.YOUR-DOMAIN.com https://*.YOUR-DOMAIN.com https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/ https://challenges.cloudflare.com; form-action 'self' https://*.YOUR-DOMAIN.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; report-uri https://your-reporting-endpoint.com/report;"
+
+    # Site-wide baseline (deny-by-default, with minimal allows)
+    # --- Baseline (site-wide) ---
+    # --- Site-wide baseline (Deny-by-default) ---
+    Header always set Permissions-Policy "accelerometer=(), autoplay=(self), camera=(self), clipboard-read=(self), clipboard-write=(self), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(self), midi=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()"
+
+    # Exception for the audio submission page to allow microphone access.
+    # We check if the request is for your specific page URL.
+    SetEnvIfExpr "%{REQUEST_URI} =~ m#^/star-submit-audio/?$#" StarmusMicAllowed=1
+    
+    # If the environment variable is set, send a DIFFERENT, more permissive policy.
+    # This policy is identical to the baseline, but changes microphone=() to microphone=(self).
+    Header always set Permissions-Policy "accelerometer=(), autoplay=(self), camera=(self), clipboard-read=(self), clipboard-write=(self), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(self), midi=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()" env=StarmusMicAllowed
+    
+    # --- Exceptions by path (match REQUEST_URI) ---
+    # Microphone: /record-submission
+    #SetEnvIfExpr "%{REQUEST_URI} =~ m#^/record-submission/?$#" mic_ok=1
+    #Header always set Permissions-Policy "accelerometer=(), autoplay=(self), camera=(), clipboard-read=(self), clipboard-write=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(self), midi=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()" env=mic_ok
+
+    # Geolocation: /profile
+    #SetEnvIfExpr "%{REQUEST_URI} =~ m#^/profile/?$#" geo_ok=1
+    #Header always set Permissions-Policy "accelerometer=(), autoplay=(self), camera=(), clipboard-read=(self), clipboard-write=(self), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()" env=geo_ok
+
+    #WooCommerce payment pages
+    #SetEnvIfExpr "%{REQUEST_URI} =~ m#^/(checkout|cart|my-account/add-payment-method)/##" pay_ok=1
+    #Header always set Permissions-Policy "accelerometer=(), autoplay=(self), camera=(), clipboard-read=(self), clipboard-write=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(self), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()" env=pay_ok
+
 </IfModule>
 
+######################################################################
 # CORS Headers
+######################################################################
+
 <IfModule mod_setenvif.c>
-    # Capture the Origin header dynamically
-    SetEnvIf Origin "^https?://(.*)$" OriginHeader=$0
-</IfModule>
+    # Whitelist front-end and overlay domains for CORS
+    SetEnvIf Origin "https?://([a-z0-9-]+\.)*YOUR-DOMAIN\.com$" IS_CORS=$0
 
-<IfModule mod_headers.c>
-    # Apply Access-Control-Allow-Origin dynamically based on Origin header
-    Header always set Access-Control-Allow-Origin "%{OriginHeader}e" env=OriginHeader
-
-    # Restrict CORS to only images (Prevents hotlinking abuse)
-    <FilesMatch "\.(bmp|cur|gif|ico|jpe?g|a?png|svgz?|webp|heic|heif|avif)$">
-        SetEnvIf Origin ":" IS_CORS
-        Header set Access-Control-Allow-Origin "*" env=IS_CORS
-        Header set Vary "Origin" env=IS_CORS
-    </FilesMatch>
 </IfModule>
 
 ## Pre-check Handling Options for the CORS
 <IfModule mod_rewrite.c>
+    RewriteEngine On
     # Handle CORS Preflight Requests (OPTIONS method) only for non-existing files/directories
     RewriteCond %{REQUEST_METHOD} OPTIONS
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule . /index.php [L]
-</IfModule>
+    RewriteRule ^.*$ - [R=204,L]
 
-# Allow timing metrics for performance measurement
-<IfModule mod_setenvif.c>
-    # Capture the Origin header dynamically for Timing-Allow-Origin
-    SetEnvIf Origin "^https?://(.*)$" TimingOrigin=$0
 </IfModule>
 
 <IfModule mod_headers.c>
-    Header always set Timing-Allow-Origin "%{TimingOrigin}e" env=TimingOrigin
-</IfModule>
+    # Apply dynamic Access-Control-Allow-Origin
+    Header always set Access-Control-Allow-Origin "%{IS_CORS}e" env=IS_CORS
+    Header always set Access-Control-Allow-Credentials "true" env=IS_CORS
 
-# CORS for Fonts
-<IfModule mod_setenvif.c>
-    SetEnvIf Origin "^https?://(.*)$" DynamicOrigin=$0
-</IfModule>
+    # Allow required methods & headers for REST
+    Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE" env=IS_CORS
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-WP-Nonce, X-HTTP-Method-Override, DNT, Keep-Alive, User-Agent, X-Requested-With, If-Modified-Since, Cache-Control, Upgrade-Insecure-Requests" env=IS_CORS
+    Header always set Access-Control-Max-Age "1728000" env=IS_CORS
 
-<IfModule mod_headers.c>
-    # Apply dynamic CORS policy to fonts & images
-    <FilesMatch "\.(bmp|cur|gif|ico|jpe?g|a?png|svgz?|webp|heic|heif|avif|eot|otf|ttf|ttc|woff|woff2)$">
-        Header always set Access-Control-Allow-Origin "%{DynamicOrigin}e" env=DynamicOrigin
-        Header set Vary "Origin"
-    </FilesMatch>
-</IfModule>
-
-# Specify the CORS Headers
-<IfModule mod_headers.c>
-    Header set Access-Control-Allow-Methods "GET, PUT, POST, OPTIONS, DELETE"
-    Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Custom-Header, DNT, Keep-Alive, User-Agent, X-Requested-With, If-Modified-Since, Cache-Control, Upgrade-Insecure-Requests"
-    Header always set Access-Control-Allow-Credentials "true"
-    Header set Access-Control-Max-Age "1728000"
-
-    # Enforce HTTPS (HSTS)
-    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-
-    Header always set X-Permitted-Cross-Domain-Policies "none"
+    # Extra protections
+    Header always set X-Content-Type-Options "nosniff" env=IS_CORS
+    Header always set X-Frame-Options "SAMEORIGIN" env=IS_CORS
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
-
-    Header always set Cross-Origin-Opener-Policy "same-origin"
-    Header always set Cross-Origin-Resource-Policy "same-origin"
-    #Header always set Cross-Origin-Embedder-Policy "require-corp"
-    Header always set Expect-CT "max-age=86400, enforce"
-
-    # Secure Cookies
-    Header always edit Set-Cookie "(.*)" "$1; Secure; HttpOnly; SameSite=Lax"
-
-    # Improved Referrer Policy (avoid info leaks)
-    Header set Referrer-Policy "strict-origin-when-cross-origin"
-
-    # Enforce Certificate Transparency (CT)
-    Header always set Expect-CT "max-age=86400, enforce"
-
-    # Security Headers
-    Header always set X-Content-Type-Options "nosniff"
-    Header always set X-Frame-Options "SAMEORIGIN"
-
-    # Disable XSS Protection (Modern browsers handle it natively)
     Header always set X-XSS-Protection "0"
+    Header always set X-Permitted-Cross-Domain-Policies "none"
+    Header set Vary "Origin" env=IS_CORS
+
+    # Keep admin locked down
+    <If "%{REQUEST_URI} =~ m#^/wp-admin/#">
+        Header always unset Access-Control-Allow-Origin
+    </If>
+
+    # Apply CORS for static assets
+    <FilesMatch "\.(css|font.css|js|bmp|cur|gif|ico|jpe?g|a?png|svgz?|webp|heic|heif|avif|eot|otf|ttf|ttc|woff|woff2)$">
+        Header always set Access-Control-Allow-Origin "%{IS_CORS}e" env=IS_CORS
+        Header set Vary "Origin" env=IS_CORS
+    </FilesMatch>
+
+    # Cross-Origin policies for browser isolation
+    Header always set Cross-Origin-Opener-Policy "cross-origin-allow-popups" env=IS_CORS
+    Header always set Cross-Origin-Resource-Policy "cross-origin" env=IS_CORS
+    Header always set Cross-Origin-Embedder-Policy "require-corp" env=IS_CORS
+
 </IfModule>
 
-## FORCE ONESIGNAL UTF-8
+######################################################################
+#  Prevent information disclosure
+######################################################################
 
-<Files OneSignalSDKWorker.js.php>
-    Allow from all
-    ForceType 'application/javascript; charset=UTF-8'
-</Files>
-
-<Files OneSignalSDKWorker.js>
-    Allow from all
-    ForceType 'application/javascript; charset=UTF-8'
-</Files>
-
-## WP Defender - Prevent information disclosure ##
-
-<FilesMatch "\.(png|jpe?g|gif|webp|svg)$">
+<FilesMatch "\.(png|jpe?g|gif|webp|svg|webm|weba|ogg|wav|mp3|icon)$">
   Require all granted
 </FilesMatch>
 
@@ -394,34 +433,28 @@ ServerSignature Off
 </FilesMatch>
 
 <FilesMatch "\.(md|exe|sh|bak|old|inc|pot|po|mo|log|sql|htaccess|htpasswd|phps|fla|psd|ini|conf|pool|jail|env|d|conf)$">
-Order allow,deny
-Deny from all
+    Require all denied
 </FilesMatch>
 
 <Files robots.txt>
-Allow from all
+    Require all granted
 </Files>
 
 <Files security.txt>
-Allow from all
+    Require all granted
 </Files>
 
 <Files ads.txt>
-Allow from all
+    Require all granted
 </Files>
 
 <Files sitemap.xml>
-Allow from all
+    Require all granted
 </Files>
 
-## WP Defender - End ##
-
-# BEGIN WP-HUMMINGBIRD-CACHING
-# The directives (lines) between "BEGIN WP-HUMMINGBIRD-CACHING" and "END WP-HUMMINGBIRD-CACHING" are
-# dynamically generated, and should only be modified via WordPress filters.
-# Any changes to the directives between these markers will be overwritten.
-
-## END WP-HUMMINGBIRD-CACHING
+######################################################################
+# CACHING
+######################################################################
 
 # Browser Cache methods
 <IfModule mod_expires.c>
@@ -442,6 +475,7 @@ Allow from all
         ExpiresByType image/x-icon "access plus 1 year"
         ExpiresByType image/bmp "access plus 1 year"
         Header set Cache-Control "public, max-age=31536000, immutable"
+
     </FilesMatch>
 
     # Fonts
@@ -453,6 +487,7 @@ Allow from all
         ExpiresByType application/font-woff "access plus 1 year"
         ExpiresByType application/font-woff2 "access plus 1 year"
         Header set Cache-Control "public, max-age=31536000, immutable"
+
     </FilesMatch>
 
     # Videos & Audio
@@ -466,6 +501,7 @@ Allow from all
         ExpiresByType video/webm "access plus 1 year"
         ExpiresByType audio/weba "access plus 1 year"
         Header set Cache-Control "public, max-age=86400, must-revalidate, stale-if-error=86400"
+
     </FilesMatch>
 
     # CSS, JS
@@ -489,12 +525,14 @@ Allow from all
       ExpiresByType application/x-brotli "access plus 1 hour"
       ExpiresByType application/x-gzip "access plus 1 hour"
       Header set Cache-Control "max-age=3600, public"
+
     </FilesMatch>
 
     # files
     <FilesMatch "\.pdf$">
         ExpiresByType application/pdf "access plus 1 year"
         Header set Cache-Control "max-age=31536000, public"
+
     </FilesMatch>
 
    #JSON, TEXT
@@ -502,23 +540,28 @@ Allow from all
         ExpiresByType application/json "access plus 1 year"
         ExpiresByType text/plain "access plus 1 year"
         Header set Cache-Control "max-age=31536000"
+
     </FilesMatch>
 
     # Static Configuration Files (manifest.json, browserconfig.xml)
     <FilesMatch "\.(json)$">
       ExpiresActive On
       ExpiresByType application/json "access plus 1 year"
+
       <IfModule mod_headers.c>
           Header set Cache-Control "public, max-age=31536000, immutable, stale-if-error=86400"
       </IfModule>
+
     </FilesMatch>
 
     <FilesMatch "\.(xml)$">
       ExpiresActive On
       ExpiresByType application/xml "access plus 1 year"
+
       <IfModule mod_headers.c>
           Header set Cache-Control "public, max-age=31536000, immutable, stale-if-error=86400"
       </IfModule>
+
     </FilesMatch>
 
    # RSS/Atom Feeds (feed, atom.xml) - Adjust filename matching if needed
@@ -526,18 +569,22 @@ Allow from all
       ExpiresActive On
       ExpiresByType application/rss+xml "access plus 1 hour"
       ExpiresByType application/atom+xml "access plus 1 hour"
+
       <IfModule mod_headers.c>
           Header set Cache-Control "public, max-age=3600, must-revalidate, stale-if-error=3600"
       </IfModule>
+
    </FilesMatch>
 
     # API Responses (/wp-json/*) - These should NOT be cached
     <FilesMatch "^/wp-json/.*$">
       ExpiresActive Off
+
       <IfModule mod_headers.c>
           Header set Cache-Control "no-store, must-revalidate, private"
           Header set Expires "0"
       </IfModule>
+
     </FilesMatch>
 
     <FilesMatch "\.(html|htm|php)$">
@@ -545,4 +592,9 @@ Allow from all
         Header set Cache-Control "no-cache, must-revalidate"
         Header set Expires "0"
     </FilesMatch>
+
 </IfModule>
+
+######################################################################
+# End of File
+######################################################################
