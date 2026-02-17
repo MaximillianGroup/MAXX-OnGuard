@@ -33,10 +33,11 @@ ServerSignature Off
 
 </IfModule>
 
-<IfModule mod_security.c>
-    SecRuleEngine Off
-
-</IfModule>
+# Disables mod security features - DEBUG ONLY
+#<IfModule mod_security.c>
+#    SecRuleEngine Off
+#
+#</IfModule>
 
 ######################################################################
 # [8G FIREWALL] v1.3 20240222
