@@ -1,3 +1,6 @@
+
+<img width="1280" height="640" alt="sparxstar-maxx-onguard" src="https://github.com/user-attachments/assets/e75a1aeb-09b0-47c4-bfbe-ac138ad3b18b" />
+
 # MaxX OnGauard&trade; WordPress Site Security
 - Apache .htaccess + .conf files to secure your WordPress Site
 - With 8G Bot Protection by Perishable Press
