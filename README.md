@@ -2,9 +2,12 @@
 <img width="1280" height="640" alt="sparxstar-maxx-onguard" src="https://github.com/user-attachments/assets/e75a1aeb-09b0-47c4-bfbe-ac138ad3b18b" />
 
 # MaxX OnGauard&trade; WordPress Site Security
+
 - Apache .htaccess + .conf files to secure your WordPress Site
 - With 8G Bot Protection by Perishable Press
 - *An .htaccess file that works!*
+
+[![CI](https://github.com/MaximillianGroup/MAXX-OnGuard/actions/workflows/blank.yml/badge.svg)](https://github.com/MaximillianGroup/MAXX-OnGuard/actions/workflows/blank.yml)  [![CodeQL](https://github.com/MaximillianGroup/MAXX-OnGuard/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/MaximillianGroup/MAXX-OnGuard/actions/workflows/github-code-scanning/codeql)  [![Copilot code review](https://github.com/MaximillianGroup/MAXX-OnGuard/actions/workflows/copilot-pull-request-reviewer/copilot-pull-request-reviewer/badge.svg)](https://github.com/MaximillianGroup/MAXX-OnGuard/actions/workflows/copilot-pull-request-reviewer/copilot-pull-request-reviewer)
 
 ## Security Settings and Optimization Guide
 
