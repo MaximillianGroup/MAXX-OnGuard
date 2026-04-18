@@ -1,7 +1,7 @@
 
 <img width="1280" height="640" alt="sparxstar-maxx-onguard" src="https://github.com/user-attachments/assets/e75a1aeb-09b0-47c4-bfbe-ac138ad3b18b" />
 
-# MaxX OnGauard&trade; WordPress Site Security
+# MaxX OnGuard&trade; WordPress Site Security
 
 - Apache .htaccess + .conf files to secure your WordPress Site
 - With 8G Bot Protection by Perishable Press
@@ -159,7 +159,7 @@ This section defines the permissions for the WordPress directory (/var/www/html/
         Require all granted
     </Directory>
 ```
-#3 Additional Security Settings
+## Additional Security Settings
 This section restricts script execution in the wp-content/uploads directory to prevent potential exploits.
 
 ```apache
@@ -206,7 +206,7 @@ sudo systemctl restart apache2
 - **Test Thoroughly:**  Test your website after making any changes to `.htaccess` to ensure that everything is working correctly.
 - **Backup Your Files:** Always create a backup of your website's files before making any changes to `.htaccess`.
 
-*This configuration provides a robust foundation for a secure and optimized WordPress site. Remember to keep your SSL certificates up-to-date and monitor your Apache logs regularly for security incidents. Use Code with causion.*
+*This configuration provides a robust foundation for a secure and optimized WordPress site. Remember to keep your SSL certificates up-to-date and monitor your Apache logs regularly for security incidents. Use Code with caution.*
 
 This guide provides a starting point for securing and optimizing your website. Remember that security and performance are ongoing processes, so stay up-to-date with the latest best practices and recommendations.
 
