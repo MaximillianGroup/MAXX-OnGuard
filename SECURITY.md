@@ -1,6 +1,6 @@
 # MaxX OnGuard&trade; Security Policy
 
-MaximillianGroup takes the security of our plugins and the trust of our users very seriously.  This document outlines the security policies for the Template plugin.
+MaximillianGroup takes the security of our plugins and the trust of our users very seriously.  This document outlines the security policies for MaxX OnGuard.
 
 ## Reporting a Vulnerability
 
