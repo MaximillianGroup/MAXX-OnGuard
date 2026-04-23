@@ -5,9 +5,9 @@
 #
 # Author:         Starisian Technology Max Barrett <support@starisian.com>
 # License:        MIT License
-# Coppyright:     Copyright (c) 2024-2026 Starisian Technologies
+# Copyright:     Copyright (c) 2024-2026 Starisian Technologies
 # Version         1.8.0
-# Server          Unbutu 
+# Server          Ubuntu 
 # Stack           Cloudflare -> Varnish -> Nginx -> Apache2 -> php-fpm 
                      -> Redis -> WordPress ->MariaDB
 ######################################################################

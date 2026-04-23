@@ -1,10 +1,10 @@
 # MaxX OnGuard&trade; Security Policy
 
-MaximillianGroup takes the security of our plugins and the trust of our users very seriously.  This document outlines the security policies for the Template plugin.
+MaximillianGroup takes the security of our plugins and the trust of our users very seriously.  This document outlines the security policies for MaxX OnGuard.
 
 ## Reporting a Vulnerability
 
-We encourage responsible disclosure of security vulnerabilities. If you believe you have found a security issue in Stellarsizer, please report it to us directly at [maximilliangroup@gmail.com](mailto:maximilliangroup@gmail.com).
+We encourage responsible disclosure of security vulnerabilities. If you believe you have found a security issue in MaxX OnGuard, please report it to us directly at [maximilliangroup@gmail.com](mailto:maximilliangroup@gmail.com).
 
 **Please do not create public issues for security vulnerabilities.** Publicly disclosing a potential vulnerability before it has been addressed could put users at risk.
 
@@ -28,7 +28,7 @@ We encourage responsible disclosure of security vulnerabilities. If you believe 
 
 ## Supported Versions
 
-We are committed to providing security support for the following Template versions:
+We are committed to providing security support for the following MaxX OnGuard versions:
 
 * **Currently Supported:** 0.5.0 and later (up to the latest release)
 
